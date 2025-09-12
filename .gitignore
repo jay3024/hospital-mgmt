@@ -1,5 +1,5 @@
 # Node
-**/node_modules
+node_modules
 npm-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
@@ -7,6 +7,13 @@ yarn-error.log*
 # Expo/React Native
 .expo/
 .expo-shared/
+
+.turbo/
+dist/
+.next/
+build/
+out/
+
 
 # Build outputs
 dist/
