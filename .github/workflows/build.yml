@@ -1,0 +1,39 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Install frontend deps
+        run: |
+          cd apps/frontend-doctor && npm install
+          cd ../../apps/frontend-hospital && npm install
+          cd ../../apps/frontend-main && npm install
+          cd ../../apps/expo && npm install
+          cd ../../apps/frontend-super-admin && npm install
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore & Build backend
+        run: |
+          cd apps/backend
+          dotnet restore
+          dotnet build --configuration Release
+
