@@ -1,0 +1,27 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Expo/React Native
+.expo/
+.expo-shared/
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+
+# VS / .NET
+bin/
+obj/
+*.user
+*.vs/
+*.vscode/
+
+# Others
+.env
+.DS_Store
