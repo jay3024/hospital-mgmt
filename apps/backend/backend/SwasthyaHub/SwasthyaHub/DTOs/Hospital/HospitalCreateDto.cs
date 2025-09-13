@@ -3,9 +3,18 @@
 namespace SwasthyaHub.DTOs.Hospital
 {
     public class HospitalCreateDto
+
+
+
     {
+
+        [Required]
+        public string Username { get; set; }
+
         [Required]
         public string Name { get; set; }
+
+
 
         [Required]
         public string Phone { get; set; }
@@ -25,6 +34,9 @@ namespace SwasthyaHub.DTOs.Hospital
 
         [Required]
         public string PinCode { get; set; }
+
+        [Required]
+        public string Password { get; set; }
 
         [Required]
         public string ContactNumber { get; set; }

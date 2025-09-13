@@ -11,5 +11,7 @@ namespace SwasthyaHub.Interfaces
         Task<bool> DeleteHospitalAsync(int id);
         Task<HospitalResponseDto> GetHospitalByIdAsync(int id);
         Task<IEnumerable<HospitalResponseDto>> GetAllHospitalsAsync();
+
+        Task<HospitalAuthResponseDto> HospitalLoginAsync(HospitalLoginDto dto);
     }
 }

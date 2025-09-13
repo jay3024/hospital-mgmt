@@ -2,9 +2,13 @@
 using SwasthyaHub.Data;
 using SwasthyaHub.DTOs.Hospital;
 using SwasthyaHub.Entities;
+using SwasthyaHub.Helpers;
 using SwasthyaHub.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace SwasthyaHub.Services
@@ -13,15 +17,43 @@ namespace SwasthyaHub.Services
     {
         private readonly ApplicationDbContext _context;
 
-        public HospitalService(ApplicationDbContext context)
+        private readonly IConfiguration _config;
+
+        public HospitalService(ApplicationDbContext context, IConfiguration config)
         {
             _context = context;
+             _config = config;
         }
 
-        public async Task<HospitalResponseDto> AddHospitalAsync(HospitalCreateDto dto)
+
+        private async Task<string> GenerateHospitalCode()
         {
+            var lastHospitalId = await _context.Hospitals.OrderByDescending(h => h.Id).FirstOrDefaultAsync();
+
+            int nextNumber = lastHospitalId != null ? lastHospitalId.Id + 1 : 1;
+
+            return $"SHH{nextNumber:D4}";
+
+
+        }
+
+
+
+
+        public async Task<HospitalResponseDto> AddHospitalAsync(HospitalCreateDto dto)
+
+
+        {
+
+            var hospitalCode = await GenerateHospitalCode();
+
+            CreatePasswordHash(dto.Password, out byte[] hash, out byte[] salt);
+
+
             var hospital = new Hospital
+
             {
+                Username = dto.Username,
                 Name = dto.Name,
                 Phone = dto.Phone,
                 Email = dto.Email,
@@ -32,6 +64,9 @@ namespace SwasthyaHub.Services
                 ContactNumber = dto.ContactNumber,
                 AddressLine1 = dto.AddressLine1,
                 AddressLine2 = dto.AddressLine2,
+                PasswordHash = hash,
+                PasswordSalt = salt,
+                HospitalCode = hospitalCode,
                 Status = Enum.TryParse<HospitalStatus>(dto.Status, true, out var parsedStatus)
                     ? parsedStatus
                     : HospitalStatus.Active // default if parsing fails
@@ -56,6 +91,15 @@ namespace SwasthyaHub.Services
                 Status = hospital.Status.ToString(),
                 CreatedAt = hospital.CreatedAt
             };
+        }
+
+
+       
+        private void CreatePasswordHash(string password, out byte[] hash, out byte[] salt)
+        {
+            using var hmac = new HMACSHA512();
+            salt = hmac.Key;
+            hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
         }
 
         public async Task<HospitalResponseDto> UpdateHospitalAsync(HospitalUpdateDto dto)
@@ -154,6 +198,37 @@ namespace SwasthyaHub.Services
                     Status = h.Status.ToString(),
                     CreatedAt = h.CreatedAt
                 }).ToListAsync();
+        }
+
+    
+
+        public async Task<HospitalAuthResponseDto> HospitalLoginAsync(HospitalLoginDto dto)
+        {
+            var hospital = await _context.Hospitals.FirstOrDefaultAsync(h => h.Username == dto.Username);
+
+            if (hospital == null)
+                throw new UnauthorizedAccessException("Invalid credentials");
+
+            if (!VerifyPasswordHash(dto.Password, hospital.PasswordHash, hospital.PasswordSalt))
+              throw new UnauthorizedAccessException("Invalid credentials");
+
+            var token = JwtHelper.GenerateToken(hospital.Username, _config["Jwt:Key"]);
+
+            return new HospitalAuthResponseDto
+            {
+                Token = token,
+                Username = hospital.Username,
+                Email = hospital.Email
+                
+            };
+        }
+
+
+        private bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt)
+        {
+            using var hmac = new HMACSHA512(storedSalt);
+            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return storedHash.SequenceEqual(computedHash);
         }
     }
 }

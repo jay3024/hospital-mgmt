@@ -13,6 +13,12 @@ namespace SwasthyaHub.Entities
         [Required]
         public string Name { get; set; }
 
+        [Required]
+        public string Username { get; set; }
+
+        [Required]
+        public string HospitalCode { get; set; }
+
      
 
         [Required]
@@ -40,6 +46,9 @@ namespace SwasthyaHub.Entities
         public string AddressLine1 { get; set; }
 
         public string AddressLine2 { get; set; }
+
+        public byte[] PasswordHash { get; set; }
+        public byte[] PasswordSalt { get; set; }
 
         public HospitalStatus Status { get; set; } = HospitalStatus.Active;
         public DateTime CreatedAt { get; set; } = DateTime.Now;

@@ -11,10 +11,37 @@ namespace SwasthyaHub.Controllers
     {
         private readonly IHospitalService _hospitalService;
 
+
+
         public HospitalController(IHospitalService hospitalService)
         {
             _hospitalService = hospitalService;
         }
+
+
+       
+
+        [HttpPost("HospitalLogin")]
+        public async Task<IActionResult> HospitalLogin([FromBody] HospitalLoginDto dto)
+        {
+            if (dto == null)
+                return BadRequest(new { message = "Invalid request body" });
+
+            var response = await _hospitalService.HospitalLoginAsync(dto);
+
+            if (response == null)
+                return Unauthorized(new { message = "Invalid Email Address or Password" });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Login Successful",
+                token = response.Token,
+                username = response.Username,
+                email = response.Email
+            });
+        }
+
 
         [HttpPost("addHopsital")]
         public async Task<IActionResult> AddHospital([FromBody] HospitalCreateDto dto)
